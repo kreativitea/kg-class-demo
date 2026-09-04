@@ -4,26 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Earthquakes around Japan</title>
-<!--
-  Earthquakes around Japan — one file, no network, no libraries.
-
-  Two encodings, which is the whole point of the map:
-    SIZE   = magnitude   (radius grows ~1.78x per magnitude step)
-    COLOUR = depth       (shallow is hot, deep is cool — the usual convention)
-
-  The data is a snapshot written into this file, not a live feed, so the map
-  looks the same every time and works with the wifi off.
-
-  Earthquakes — USGS, a US federal government work. Re-cut with a later
-  end date to refresh:
-    https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson
-      &starttime=2016-01-01&endtime=2026-09-04
-      &minlatitude=22&maxlatitude=48&minlongitude=121&maxlongitude=151
-      &minmagnitude=4.0&orderby=time&limit=20000
-
-  Coastlines — Natural Earth 10m land (public domain), clipped to the box
-  above and simplified to about 1 km.
--->
 <style>
   :root{
     --bg:#05080f; --ink:#e9eef5; --muted:#8fa3b8; --dim:#5b7086;
@@ -46,6 +26,11 @@
   .lab{font-size:10.5px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 
   #head{top:14px;left:14px;padding:13px 16px 12px;max-width:330px}
+  #lang{display:inline-flex;margin-top:10px;border:1px solid var(--line);
+    border-radius:7px;overflow:hidden}
+  #lang button{flex:none;border:0;border-radius:0;padding:4px 11px;font-size:11.5px;
+    background:transparent;color:var(--muted)}
+  #lang button.on{background:#2a6fa8;color:var(--ink)}
   #count{margin-top:9px;font-size:12.5px;color:var(--muted)}
   #count b{color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums}
 
@@ -53,8 +38,8 @@
   #ramp{height:11px;border-radius:3px;margin:7px 0 5px}
   .ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);
     font-variant-numeric:tabular-nums}
-  .mags{display:flex;align-items:flex-end;gap:10px;height:42px;margin:10px 0 2px;padding-left:2px}
-  .mags i{display:block;border-radius:50%;background:transparent;border:1.5px solid #9db4c9}
+  .mags{display:flex;align-items:flex-end;gap:12px;height:50px;margin:12px 0 2px;padding-left:3px}
+  .mags i{display:block;border-radius:50%;background:rgba(157,180,201,.18);border:1.4px solid #9db4c9}
   .mags span{font-size:10.5px;color:var(--dim);display:block;text-align:center;margin-top:4px}
   .mcol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
   hr{border:0;border-top:1px solid var(--line);margin:13px 0 2px}
@@ -105,51 +90,52 @@
 <canvas id="sec"></canvas>
 
 <div class="panel" id="head">
-  <h1>Earthquakes around Japan</h1>
-  <p class="sub">Every recorded quake of magnitude 4.0 and above, 2016&ndash;2026.</p>
-  <div id="count">Showing <b id="n">0</b> of <b id="tot">0</b> earthquakes</div>
+  <h1 data-i18n="title">Earthquakes around Japan</h1>
+  <p class="sub" data-i18n="sub">Every recorded quake of magnitude 4.0 and above, 2016&ndash;2026.</p>
+  <div id="count"></div>
+  <div id="lang"><button data-lang="en">EN</button><button data-lang="ja">日本語</button></div>
 </div>
 
 <div class="panel" id="legend">
-  <div class="lab">Colour &mdash; depth</div>
+  <div class="lab" data-i18n="colourDepth">Colour &mdash; depth</div>
   <div id="ramp"></div>
-  <div class="ticks"><span>0</span><span>70</span><span>150</span><span>300</span><span>700 km</span></div>
+  <div class="ticks" id="ticks"></div>
   <hr>
-  <div class="lab" style="margin-top:11px">Size &mdash; magnitude</div>
+  <div class="lab" style="margin-top:11px" data-i18n="sizeMag">Size &mdash; magnitude</div>
   <div class="mags" id="msc"></div>
 </div>
 
 <div class="panel" id="ctl">
   <div class="grp">
-    <div class="lab">Magnitude <span class="val" id="mv"></span></div>
+    <div class="lab"><span data-i18n="magnitude">Magnitude</span> <span class="val" id="mv"></span></div>
     <div class="dual"><div class="fill" id="mf"></div>
       <input type="range" id="m0" min="4" max="8" step="0.1" value="4">
       <input type="range" id="m1" min="4" max="8" step="0.1" value="8"></div>
   </div>
   <div class="grp">
-    <div class="lab">Depth <span class="val" id="dv"></span></div>
+    <div class="lab"><span data-i18n="depth">Depth</span> <span class="val" id="dv"></span></div>
     <div class="dual"><div class="fill" id="df"></div>
       <input type="range" id="d0" min="0" max="700" step="5" value="0">
       <input type="range" id="d1" min="0" max="700" step="5" value="700"></div>
   </div>
   <div class="grp">
-    <div class="lab">Year <span class="val" id="yv"></span></div>
+    <div class="lab"><span data-i18n="year">Year</span> <span class="val" id="yv"></span></div>
     <div class="dual"><div class="fill" id="yf"></div>
       <input type="range" id="y0" min="0" max="1" step="1" value="0">
       <input type="range" id="y1" min="0" max="1" step="1" value="1"></div>
   </div>
   <div class="row">
-    <button id="play">&#9654;&nbsp; Play years</button>
-    <button id="reset">Reset</button>
+    <button id="play"></button>
+    <button id="reset" data-i18n="reset">Reset</button>
   </div>
   <div class="row">
-    <button id="xs">Cross-section</button>
+    <button id="xs" data-i18n="section">Cross-section</button>
   </div>
 </div>
 
 <div id="tip"></div>
-<div id="hint">Scroll to zoom &middot; drag to pan &middot; hover a circle for detail</div>
-<div id="src">Data: <a href="https://earthquake.usgs.gov" target="_blank" rel="noopener">USGS</a>
+<div id="hint" data-i18n="hint">Scroll to zoom &middot; drag to pan &middot; hover a circle for detail</div>
+<div id="src"><!-- attribution stays English -->Data: <a href="https://earthquake.usgs.gov" target="_blank" rel="noopener">USGS</a>
   &middot; coastlines: Natural Earth</div>
 
 <script>
@@ -161,19 +147,38 @@ const T0    = Date.UTC(2016,0,1);
 const DIRS  = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
 
 /* ---- the two encodings ------------------------------------------------ */
-// SIZE = magnitude. Each magnitude step is ~32x more energy, so radius grows fast.
-const radius = m => 1.25 * Math.pow(1.78, m - 4);
+// SIZE = magnitude. A magnitude step is ~32x the energy, and 90% of these
+// quakes are under M5, so the curve has to be steep or the rare big ones
+// vanish into the crowd. 2.45x radius per step: M4 is 1px, M7 is 15px and
+// the M7.6 is 25px — about 630x the area of an M4. Past 6px they are drawn
+// as rings rather than discs, so a big one does not hide what is under it.
+const radius = m => Math.pow(2.45, m - 4);
 
-// COLOUR = depth. The seismological convention: hot = shallow, cool = deep.
-const STOPS = [[0,255,52,38],[33,255,124,0],[70,255,212,0],[150,124,214,72],
-               [300,32,190,214],[450,46,116,224],[700,150,86,222]];
+// COLOUR = depth, as a full rainbow. The stops are not evenly spaced in
+// kilometres on purpose: two thirds of these quakes are shallower than 50 km,
+// so a scale that was linear in depth spent the whole rainbow on the empty
+// deep end and painted the map one shade of red. Crowding the stops where the
+// data actually is spends the rainbow where it can be seen.
+const STOPS = [[0,  255, 42, 42], [15, 255,126,  0], [30, 255,214,  0],
+               [50, 124,222, 58], [80,  16,212,190], [130, 48,140,255],
+               [250,150, 96,246], [450,255, 62,175], [700,255,158,222]];
+const NSEG = STOPS.length - 1;
 function depthRGB(d){
-  if(d<=0) return STOPS[0].slice(1);
-  for(let i=1;i<STOPS.length;i++){
-    const a=STOPS[i-1], b=STOPS[i];
-    if(d<=b[0]||i===STOPS.length-1){
-      const t=Math.min(1,(d-a[0])/(b[0]-a[0]));
+  for(let i=1;i<=NSEG;i++){
+    if(d<=STOPS[i][0] || i===NSEG){
+      const a=STOPS[i-1], b=STOPS[i];
+      const t=Math.min(1,Math.max(0,(d-a[0])/(b[0]-a[0])));
       return [a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t, a[3]+(b[3]-a[3])*t];
+    }
+  }
+}
+// where a depth sits along the ramp, 0..1 — each stop gets an equal slice, so
+// the legend shows the whole rainbow rather than a red bar with a blue tip
+function depthPos(d){
+  for(let i=1;i<=NSEG;i++){
+    if(d<=STOPS[i][0] || i===NSEG){
+      const a=STOPS[i-1][0], b=STOPS[i][0];
+      return ((i-1) + Math.min(1,Math.max(0,(d-a)/(b-a)))) / NSEG;
     }
   }
 }
@@ -216,8 +221,8 @@ function refilter(){
   const a=Date.UTC(F.y0,0,1), b=Date.UTC(F.y1+1,0,1);
   shown = Q.filter(q=> q.mag>=F.m0-1e-9 && q.mag<=F.m1+1e-9 &&
                        q.dep>=F.d0 && q.dep<=F.d1 && q.t>=a && q.t<b);
-  document.getElementById('n').textContent = shown.length.toLocaleString();
-}
+}                       // setCount() owns the readout — the two languages
+                        // order that sentence differently
 
 /* ---- drawing ---------------------------------------------------------- */
 function draw(){
@@ -245,16 +250,23 @@ function draw(){
     const x=X(q.lon), y=Y(q.lat), r=q.r*rs;
     if(x<-r||x>cw+r||y<-r||y>ch+r) continue;
     g.beginPath(); g.arc(x,y,r,0,7);
-    g.globalAlpha = q.mag>=6 ? .92 : .72;
-    g.fillStyle=q.col; g.fill();
-    if(r>4.5){ g.globalAlpha=.9; g.lineWidth=.9; g.strokeStyle='rgba(255,255,255,.45)'; g.stroke(); }
+    if(r>6){                       // a big quake is drawn as a ring: at this
+      g.globalAlpha=.22;           // size a solid disc would hide everything
+      g.fillStyle=q.col; g.fill(); // underneath it
+      g.globalAlpha=.95; g.lineWidth=Math.min(3, r*.16+1.1);
+      g.strokeStyle=q.col; g.stroke();
+    } else {
+      g.globalAlpha = q.mag>=5 ? .9 : .68;
+      g.fillStyle=q.col; g.fill();
+    }
   }
   g.globalAlpha=1;
 
   // cities last, so they stay readable over a dense field of dots
-  g.font='600 11px -apple-system,Segoe UI,sans-serif';
+  g.font=`600 11px ${FONT}`;
   g.lineWidth=3; g.strokeStyle='rgba(3,7,12,.85)'; g.lineJoin='round';
-  for(const [nm,lo,la] of CITIES){
+  for(const [en,ja,lo,la] of CITIES){
+    const nm = lang==='ja' ? ja : en;
     const x=X(lo), y=Y(la);
     if(x<-40||x>cw+40||y<-20||y>ch+20) continue;
     g.beginPath(); g.arc(x,y,2.4,0,7);
@@ -262,8 +274,11 @@ function draw(){
     g.strokeText(nm, x+6, y+3.5); g.fillText(nm, x+6, y+3.5);
   }
 }
-const CITIES=[["Tokyo",139.69,35.68],["Osaka",135.50,34.69],["Sapporo",141.35,43.06],
-  ["Fukuoka",130.40,33.59],["Sendai",140.87,38.27],["Naha",127.68,26.21],["Niigata",139.02,37.90]];
+const FONT = '-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",Roboto,sans-serif';
+const CITIES=[["Tokyo","東京",139.69,35.68],["Osaka","大阪",135.50,34.69],
+  ["Sapporo","札幌",141.35,43.06],["Fukuoka","福岡",130.40,33.59],
+  ["Sendai","仙台",140.87,38.27],["Naha","那覇",127.68,26.21],
+  ["Niigata","新潟",139.02,37.90]];
 </script>
 <script>
 /* ---- cross-section: the same events seen from the side ---------------- */
@@ -323,11 +338,11 @@ function drawSection(){
   sg.beginPath(); sg.moveTo(34,31.5); sg.lineTo(cw,31.5); sg.stroke();
   sg.strokeStyle='rgba(90,130,170,.13)';
   sg.fillStyle='rgba(140,170,200,.55)';
-  sg.font='10px -apple-system,Segoe UI,sans-serif';
+  sg.font=`10px ${FONT}`;
   for(const d of [0,100,200,300,400,500,600,700]){
     const y=D(d);
     sg.beginPath(); sg.moveTo(34,y); sg.lineTo(cw,y); sg.stroke();
-    sg.fillText(d===0?'0 km':d, 4, y+3.5);
+    sg.fillText(d===0?('0 '+T().km):d, 4, y+3.5);
   }
   const lo=band.c-band.h/2, hi=band.c+band.h/2;
   const inband = shown.filter(q=>q.lat>=lo&&q.lat<=hi);
@@ -336,14 +351,14 @@ function drawSection(){
     const x=X(q.lon), y=D(Math.min(q.dep,MAXD)), r=q.r*rs;
     if(x<-r||x>cw+r) continue;
     sg.beginPath(); sg.arc(x,y,r,0,7);
-    sg.globalAlpha = q.mag>=6?.95:.7; sg.fillStyle=q.col; sg.fill();
-    if(r>4.5){ sg.globalAlpha=.9; sg.lineWidth=.9; sg.strokeStyle='rgba(255,255,255,.45)'; sg.stroke(); }
+    if(r>6){ sg.globalAlpha=.22; sg.fillStyle=q.col; sg.fill();
+             sg.globalAlpha=.95; sg.lineWidth=Math.min(3, r*.16+1.1);
+             sg.strokeStyle=q.col; sg.stroke(); }
+    else   { sg.globalAlpha = q.mag>=5?.9:.68; sg.fillStyle=q.col; sg.fill(); }
   }
   sg.globalAlpha=1;
-  sg.fillStyle='rgba(233,238,245,.92)'; sg.font='600 11.5px -apple-system,Segoe UI,sans-serif';
-  sg.fillText(`Side view of the slice between ${lo.toFixed(1)}°N and ${hi.toFixed(1)}°N `
-            + `— ${inband.length.toLocaleString()} quakes, seen from the south. `
-            + `Grey bar = land. Drag the band on the map to move it.`, 34, 14);
+  sg.fillStyle='rgba(233,238,245,.92)'; sg.font=`600 11.5px ${FONT}`;
+  sg.fillText(T().sec(lo.toFixed(1), hi.toFixed(1), inband.length.toLocaleString()), 34, 14);
 }
 /* the band drawn over the map, so you can see which slice you are looking at */
 function drawBand(){
@@ -402,19 +417,75 @@ cv.addEventListener('mousemove', e=>{
     if(d2<=r*r && d2<best){ best=d2; hit=q; if(q.mag>=6) break; }
   }
   if(!hit){ tip.style.opacity=0; return; }
-  const dt=new Date(hit.t);
-  const where = hit.dist ? `${hit.dist} km ${DIRS[hit.dir]||''} of ${NAMES[hit.name]}` : NAMES[hit.name];
+  const dt=new Date(hit.t).toISOString().slice(0,10);
   tip.innerHTML =
     `<div class="m" style="color:${hit.col}">M ${hit.mag.toFixed(1)}</div>`+
-    `<div class="p">${where}</div>`+
-    `<div class="d">${Math.round(hit.dep)} km deep &middot; `+
-    `${dt.toISOString().slice(0,10)}</div>`;
+    `<div class="p">${T().where(hit.dist, hit.dir, NAMES[hit.name])}</div>`+
+    `<div class="d">${T().deep(Math.round(hit.dep), dt)}</div>`;
   tip.style.opacity=1;
   const tw=tip.offsetWidth, th=tip.offsetHeight;
   tip.style.left = Math.min(cw-tw-8, mx+16)+'px';
   tip.style.top  = Math.max(8, my-th-14)+'px';
 });
 cv.addEventListener('mouseleave', ()=>{ tip.style.opacity=0; });
+
+/* ---- language ---------------------------------------------------------
+   English is the source. Prose only is translated: the attribution line and
+   the USGS place names stay English in both, and so do the numbers.        */
+const DIRS_JA = ["北","北北東","北東","東北東","東","東南東","南東","南南東",
+                 "南","南南西","南西","西南西","西","西北西","北西","北北西"];
+const STR = {
+  en: {
+    title:"Earthquakes around Japan",
+    sub:"Every recorded quake of magnitude 4.0 and above, 2016–2026.",
+    colourDepth:"Colour — depth", sizeMag:"Size — magnitude",
+    magnitude:"Magnitude", depth:"Depth", year:"Year",
+    reset:"Reset", section:"Cross-section",
+    play:"▶\u00a0 Play years", stop:"■\u00a0 Stop",
+    hint:"Scroll to zoom · drag to pan · hover a circle for detail",
+    count:(n,t)=>`Showing <b>${n}</b> of <b>${t}</b> earthquakes`,
+    deep:(d,date)=>`${d} km deep · ${date}`,
+    where:(dist,dir,place)=> dist ? `${dist} km ${DIRS[dir]||""} of ${place}` : place,
+    sec:(lo,hi,n)=>`Side view of the slice between ${lo}°N and ${hi}°N — `
+      + `${n} quakes, seen from the south. Grey bar = land. `
+      + `Drag the band on the map to move it.`,
+    km:"km"
+  },
+  ja: {
+    title:"日本周辺の地震",
+    sub:"マグニチュード4.0以上の地震すべて（2016〜2026年）。",
+    colourDepth:"色 — 深さ", sizeMag:"大きさ — マグニチュード",
+    magnitude:"マグニチュード", depth:"深さ", year:"年",
+    reset:"リセット", section:"断面図",
+    play:"▶\u00a0 年ごとに再生", stop:"■\u00a0 停止",
+    hint:"スクロールで拡大・ドラッグで移動・円にカーソルを合わせると詳細",
+    count:(n,t)=>`全<b>${t}</b>件のうち<b>${n}</b>件を表示`,
+    deep:(d,date)=>`深さ ${d} km · ${date}`,
+    where:(dist,dir,place)=> dist ? `${place}の${DIRS_JA[dir]||""}${dist}km` : place,
+    sec:(lo,hi,n)=>`北緯${lo}度〜${hi}度の断面を南から見た図（${n}件）。`
+      + `灰色の帯は陸地。地図上の帯をドラッグすると移動します。`,
+    km:"km"
+  }
+};
+let lang = 'en';
+try { const v = localStorage.getItem('quake-lang'); if(v==='en'||v==='ja') lang=v; } catch(e){}
+const T = () => STR[lang];
+
+function setLang(v){
+  lang = v;
+  try { localStorage.setItem('quake-lang', v); } catch(e){}
+  document.documentElement.lang = v;
+  for(const el of document.querySelectorAll('[data-i18n]')){
+    const k = el.dataset.i18n; if(T()[k]) el.textContent = T()[k];
+  }
+  for(const b of document.querySelectorAll('#lang button'))
+    b.classList.toggle('on', b.dataset.lang===v);
+  $('play').textContent = timer ? T().stop : T().play;
+  setCount(); legend(); render();
+}
+function setCount(){
+  $('count').innerHTML = T().count(shown.length.toLocaleString(), Q.length.toLocaleString());
+}
 
 /* ---- controls --------------------------------------------------------- */
 const $ = id => document.getElementById(id);
@@ -441,7 +512,7 @@ const syncY = pair('y0','y1','yf',0,YR1-YR0,(x,y)=>{
 
 function update(){
   tip.style.opacity=0;   // whatever it described may have just been filtered out
-  refilter(); render();
+  refilter(); setCount(); render();
 }
 function render(){ draw(); drawBand(); if(secOn) drawSection(); }
 
@@ -449,9 +520,9 @@ function render(){ draw(); drawBand(); if(secOn) drawSection(); }
 let timer=null;
 $('play').addEventListener('click', ()=>{
   if(timer){ clearInterval(timer); timer=null; $('play').classList.remove('on');
-             $('play').innerHTML='&#9654;&nbsp; Play years';
+             $('play').textContent=T().play;
              $('y0').value=0; $('y1').value=YR1-YR0; syncY('a'); return; }
-  $('play').classList.add('on'); $('play').innerHTML='&#9632;&nbsp; Stop';
+  $('play').classList.add('on'); $('play').textContent=T().stop;
   let k=0;
   const step=()=>{
     $('y0').value=k; $('y1').value=k; syncY('a');
@@ -464,7 +535,7 @@ $('reset').addEventListener('click', ()=>{
   $('m0').value=4; $('m1').value=8; syncM('a');
   $('d0').value=0; $('d1').value=700; syncD('a');
   if(timer){ clearInterval(timer); timer=null; $('play').classList.remove('on');
-             $('play').innerHTML='&#9654;&nbsp; Play years'; }
+             $('play').textContent=T().play; }
   $('y0').value=0; $('y1').value=YR1-YR0; syncY('a');
 });
 $('xs').addEventListener('click', ()=>{
@@ -474,29 +545,34 @@ $('xs').addEventListener('click', ()=>{
 });
 
 /* ---- legend ----------------------------------------------------------- */
-(function legend(){
-  const stops=[]; for(let i=0;i<=100;i++){
-    // ticks are laid out on the same piecewise scale the colours use
-    const d = [0,70,150,300,700], p=[0,25,50,75,100];
-    let k=0; while(k<4 && i>p[k+1]) k++;
-    const dd = d[k] + (d[k+1]-d[k])*((i-p[k])/(p[k+1]-p[k]));
-    stops.push(`${depthCSS(dd)} ${i}%`);
-  }
-  $('ramp').style.background = `linear-gradient(90deg, ${stops.join(',')})`;
-  const html = [4,5,6,7].map(m=>{
-    const s=Math.max(6, radius(m)*4.6);
-    return `<div class="mcol"><i style="width:${s}px;height:${s}px"></i>`+
-           `<span>${m}</span></div>`;
+/* the ramp puts every stop at an equal slice, which is what makes the whole
+   rainbow visible; the tick labels then sit at their true positions.       */
+function legend(){
+  $('ramp').style.background = 'linear-gradient(90deg,' + STOPS.map((s,i)=>
+    `rgb(${s[1]},${s[2]},${s[3]}) ${i/NSEG*100}%`).join(',') + ')';
+  $('ticks').innerHTML = [0,30,80,250,700].map((d,i,arr)=>
+    `<span>${d}${i===arr.length-1?' '+T().km:''}</span>`).join('');
+  // drawn at their true radius, so the legend makes the same claim the map does
+  $('msc').innerHTML = [4,5,6,7].map(m=>{
+    const s = Math.max(3, radius(m)*2);
+    return `<div class="mcol"><i style="width:${s}px;height:${s}px"></i><span>${m}</span></div>`;
   }).join('');
-  $('msc').innerHTML = html;
-})();
+}
 
 /* ---- go --------------------------------------------------------------- */
-$('tot').textContent = Q.length.toLocaleString();
+for(const b of document.querySelectorAll('#lang button'))
+  b.addEventListener('click', ()=>setLang(b.dataset.lang));
+window.addEventListener('keydown', e=>{
+  if(e.key==='j'||e.key==='J'){            // the repo's convention: `j` toggles
+    if(!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName))
+      setLang(lang==='ja'?'en':'ja');
+  }
+});
 function boot(){ relayout(); update(); }
 window.addEventListener('resize', ()=>{ relayout(); render(); });
 syncM('a'); syncD('a'); syncY('a');
 boot();
+setLang(lang);   // paints the chrome, the legend and the map in one pass
 
 </script>
 </body>
