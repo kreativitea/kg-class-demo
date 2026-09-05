@@ -437,9 +437,13 @@ cv.addEventListener('wheel', e=>{
   const k = Math.exp(-e.deltaY*0.0016);
   const nz = Math.max(1, Math.min(14, zoom*k));
   const f = nz/zoom;
-  // keep the point under the cursor pinned while zooming
-  panx = e.offsetX - f*(e.offsetX - panx);
-  pany = e.offsetY - f*(e.offsetY - pany);
+  // Keep the point under the cursor pinned. X() scales about the canvas
+  // CENTRE — (world - cw/2)*zoom + cw/2 + panx — so the anchor has to be
+  // measured from the centre too. Using the raw offset left an error of
+  // cw/2*(1-f), which slid the map sideways on every notch.
+  const ax = e.offsetX - cw/2, ay = e.offsetY - ch/2;
+  panx = ax - f*(ax - panx);
+  pany = ay - f*(ay - pany);
   zoom = nz;
   render();
 }, {passive:false});
