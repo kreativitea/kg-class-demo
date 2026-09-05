@@ -50,6 +50,15 @@ The catalogue is stored to the **hour**, so aftershock sequences arrive in their
 real order. Watch 1 January 2024: the Noto Peninsula M7.5 is still ringing while
 its M6.5, M6.2, M6.1, M5.9 and M5.8 aftershocks fire around it.
 
+**Fade after** decides how long a quake stays on the map — from one day to ten
+years, measured in *simulated* time, so the window means the same thing at any
+speed. This is the control that makes playback readable. Ten years of
+accumulation ends as a solid mat of dots; a three-month window at the Noto
+mainshock draws 410 quakes instead of 14,568, and the sequence is the only thing
+moving on the map. **Keep all** switches the window off and lets everything pile
+up. Neither applies when playback is stopped — then you always see the full
+filtered catalogue.
+
 ## Cross-section
 
 **Cross-section** slices the region and shows the same earthquakes *from the

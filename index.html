@@ -66,6 +66,8 @@
   input[type=range]::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;
     background:#e9eef5;border:2px solid #16232f;box-shadow:0 1px 4px rgba(0,0,0,.6);cursor:grab}
   .row{display:flex;gap:7px;margin-top:13px}
+  .grp.off{opacity:.35}
+  .grp.off input{pointer-events:none}
   button{flex:1;font:inherit;font-size:12px;font-weight:550;color:var(--ink);cursor:pointer;
     background:rgba(120,160,200,.11);border:1px solid var(--line);border-radius:7px;padding:7px 4px;
     transition:background .13s}
@@ -128,12 +130,20 @@
       <input type="range" id="y0" min="0" max="1" step="1" value="0">
       <input type="range" id="y1" min="0" max="1" step="1" value="1"></div>
   </div>
+  <div class="grp" id="trailGrp">
+    <div class="lab"><span data-i18n="fade">Fade after</span> <span class="val" id="tv"></span></div>
+    <div class="dual"><div class="fill" id="tf"></div>
+      <input type="range" id="tr" min="0" max="100" step="1" value="55"></div>
+  </div>
   <div class="row">
     <button id="play" style="flex:2.2"></button>
     <button id="spd"></button>
   </div>
   <div class="row">
+    <button id="persist" data-i18n="keepall">Keep all</button>
     <button id="reset" data-i18n="reset">Reset</button>
+  </div>
+  <div class="row">
     <button id="xs" data-i18n="section">Cross-section</button>
   </div>
 </div>
@@ -226,6 +236,12 @@ const invLat = py => {
 const DAY = 86400000;
 const SPEEDS = [1, 2, 4];
 let speedIdx = 0, playing = false, animT = 0, struckCount = 0;
+
+// Keep every quake on screen, or let it fade? Ten years of accumulation ends
+// up a solid mat of dots; a rolling window says where the ground is busy now.
+// The trail is measured in *model* days, not seconds of screen time, so
+// "90 days" means the same window of real seismicity at any playback speed.
+let persist = false, trailDays = 90;
 const daysPerSec = () => 78 * SPEEDS[speedIdx];   // the decade in ~50s at 1x
 
 // A strike stays lit for a fixed span of *wall* time, converted to model time,
@@ -274,21 +290,33 @@ function draw(){
   const pulses = [];
   struckCount = 0;
   for(const q of shown){
-    if(playing && q.t > animT) continue;
+    let fade = 1;
+    if(playing){
+      if(q.t > animT) continue;                    // has not happened yet
+      if(!persist){
+        const a = (animT - q.t)/(trailDays*DAY);
+        if(a > 1) continue;                        // outside the window
+        fade = a < .6 ? 1 : 1 - (a-.6)/.4;         // hold, then ease out
+      }
+    }
     struckCount++;
     const x=X(q.lon), y=Y(q.lat), r=q.r*rs;
     if(x<-r||x>cw+r||y<-r||y>ch+r) continue;
-    const age = playing ? (animT - q.t)/pulseSpan(q.mag) : 2;  // 0..1 while lit
+    // the ripple must finish inside the trail, or a short window would clip
+    // rings mid-expansion and look like a fault rather than a setting
+    const span = persist ? pulseSpan(q.mag)
+                         : Math.min(pulseSpan(q.mag), trailDays*DAY);
+    const age = playing ? (animT - q.t)/span : 2;             // 0..1 while lit
     const hot = age <= 1;
     if(hot && q.mag >= RING_MIN_MAG) pulses.push([x, y, r, age, q.col, q.mag]);
     g.beginPath(); g.arc(x,y,r,0,7);
     if(r>6){                            // a big quake is drawn as a ring: at
-      g.globalAlpha = hot ? .45 : .22;  // this size a solid disc would hide
+      g.globalAlpha = (hot ? .45 : .22) * fade;   // at this size a solid
       g.fillStyle=q.col; g.fill();      // everything underneath it
-      g.globalAlpha=.95; g.lineWidth=Math.min(3, r*.16+1.1);
+      g.globalAlpha=.95*fade; g.lineWidth=Math.min(3, r*.16+1.1);
       g.strokeStyle=q.col; g.stroke();
     } else {
-      g.globalAlpha = hot ? 1 : (q.mag>=5 ? .9 : .68);
+      g.globalAlpha = (hot ? 1 : (q.mag>=5 ? .9 : .68)) * fade;
       g.fillStyle=q.col; g.fill();
     }
   }
@@ -384,7 +412,8 @@ function drawSection(){
     sg.fillText(d===0?('0 '+T().km):d, 4, y+3.5);
   }
   const lo=band.c-band.h/2, hi=band.c+band.h/2;
-  const inband = shown.filter(q=>q.lat>=lo&&q.lat<=hi&&(!playing||q.t<=animT));
+  const inband = shown.filter(q=> q.lat>=lo && q.lat<=hi &&
+    (!playing || (q.t<=animT && (persist || animT-q.t <= trailDays*DAY))));
   const rs = Math.pow(zoom,.42);
   for(const q of inband){
     const x=X(q.lon), y=D(Math.min(q.dep,MAXD)), r=q.r*rs;
@@ -484,6 +513,12 @@ const STR = {
     colourDepth:"Colour — depth", sizeMag:"Size — magnitude",
     magnitude:"Magnitude", depth:"Depth", year:"Year",
     reset:"Reset", section:"Cross-section",
+    fade:"Fade after", keepall:"Keep all",
+    span:d => d < 1.5 ? "1 day"
+           : d < 60  ? `${Math.round(d)} days`
+           : d < 365 ? `${Math.round(d/30.44)} months`
+           : `${+(d/365.25).toFixed(1)} years`,
+    forever:"never",
     play:"▶\u00a0 Play", stop:"■\u00a0 Stop",
     hint:"Scroll to zoom · drag to pan · hover a circle for detail",
     count:(n,t)=>`Showing <b>${n}</b> of <b>${t}</b> earthquakes`,
@@ -501,6 +536,12 @@ const STR = {
     colourDepth:"色 — 深さ", sizeMag:"大きさ — マグニチュード",
     magnitude:"マグニチュード", depth:"深さ", year:"年",
     reset:"リセット", section:"断面図",
+    fade:"消えるまで", keepall:"全て残す",
+    span:d => d < 1.5 ? "1日"
+           : d < 60  ? `${Math.round(d)}日`
+           : d < 365 ? `${Math.round(d/30.44)}か月`
+           : `${+(d/365.25).toFixed(1)}年`,
+    forever:"消えない",
     play:"▶\u00a0 再生", stop:"■\u00a0 停止",
     hint:"スクロールで拡大・ドラッグで移動・円にカーソルを合わせると詳細",
     count:(n,t)=>`全<b>${t}</b>件のうち<b>${n}</b>件を表示`,
@@ -527,7 +568,7 @@ function setLang(v){
     b.classList.toggle('on', b.dataset.lang===v);
   $('play').textContent = playing ? T().stop : T().play;
   $('spd').textContent = SPEEDS[speedIdx]+'\u00d7';
-  showClock(); legend(); render();
+  syncTrail(); showClock(); legend(); render();
 }
 // the readout is owned by showClock(), which also carries the date
 
@@ -554,6 +595,25 @@ const syncY = pair('y0','y1','yf',0,YR1-YR0,(x,y)=>{
   F.y0=YR0+x; F.y1=YR0+y;
   $('yv').textContent = x===y ? `${F.y0}` : `${F.y0} – ${F.y1}`; update(); });
 
+/* the trail slider is logarithmic: one day at the left, ten years at the
+   right, so the useful short windows get most of the travel.              */
+const TRAIL_MAX = 3650;
+const posToDays = v => Math.pow(TRAIL_MAX, v/100);
+function syncTrail(){
+  const v = +$('tr').value;
+  trailDays = posToDays(v);
+  $('tf').style.left = '0%'; $('tf').style.width = v+'%';
+  $('tv').textContent = persist ? T().forever : T().span(trailDays);
+  $('trailGrp').classList.toggle('off', persist);
+  render();
+}
+$('tr').addEventListener('input', syncTrail);
+$('persist').addEventListener('click', ()=>{
+  persist = !persist;
+  $('persist').classList.toggle('on', persist);
+  syncTrail();
+});
+
 function update(){
   tip.style.opacity=0;   // whatever it described may have just been filtered out
   refilter(); showClock(); render();
@@ -572,7 +632,7 @@ function frame(now){
   const dt = Math.min(now - lastFrame, 250);   // a tab that was hidden must
   lastFrame = now;                             // not jump the whole decade
   animT += dt/1000 * daysPerSec() * DAY;
-  if(animT >= winEnd()){ animT = winEnd(); stopPlay(); render(); return; }
+  if(animT >= winEnd()){ animT = winEnd(); stopPlay(); return; }
   render(); showClock();
   raf = requestAnimationFrame(frame);
 }
@@ -591,9 +651,9 @@ function stopPlay(){
   playing = false;
   if(raf) cancelAnimationFrame(raf), raf = null;
   $('play').classList.remove('on'); $('play').textContent = T().play;
-  showClock();
+  showClock(); render();      // the trail no longer applies, so redraw here
 }
-$('play').addEventListener('click', ()=> playing ? (stopPlay(), render()) : startPlay());
+$('play').addEventListener('click', ()=> playing ? stopPlay() : startPlay());
 $('spd').addEventListener('click', ()=>{
   speedIdx = (speedIdx+1) % SPEEDS.length;
   $('spd').textContent = SPEEDS[speedIdx]+'\u00d7';
@@ -603,6 +663,8 @@ $('reset').addEventListener('click', ()=>{
   $('m0').value=4; $('m1').value=8; syncM('a');
   $('d0').value=0; $('d1').value=700; syncD('a');
   if(playing) stopPlay();
+  persist = false; $('persist').classList.remove('on');
+  $('tr').value = 55; syncTrail();
   $('y0').value=0; $('y1').value=YR1-YR0; syncY('a');
 });
 $('xs').addEventListener('click', ()=>{
