@@ -50,14 +50,24 @@ The catalogue is stored to the **hour**, so aftershock sequences arrive in their
 real order. Watch 1 January 2024: the Noto Peninsula M7.5 is still ringing while
 its M6.5, M6.2, M6.1, M5.9 and M5.8 aftershocks fire around it.
 
-**Fade after** decides how long a quake stays on the map — from one day to ten
-years, measured in *simulated* time, so the window means the same thing at any
-speed. This is the control that makes playback readable. Ten years of
-accumulation ends as a solid mat of dots; a three-month window at the Noto
-mainshock draws 410 quakes instead of 14,568, and the sequence is the only thing
-moving on the map. **Keep all** switches the window off and lets everything pile
-up. Neither applies when playback is stopped — then you always see the full
-filtered catalogue.
+**How long a quake stays on the map depends on how big it was**, because that is
+how the ground behaves: an M4 is over in a day or two, while an M7's aftershocks
+run for months and it is still the story on the map long afterwards. The window
+is three times longer per magnitude step:
+
+| M4 | M5 | M6 | M7 | M7.6 |
+|---|---|---|---|---|
+| 2 weeks | 6 weeks | 4 months | 1 year | 2 years |
+
+**Trail** multiplies all of those at once, from 0.13× to 8×, with 1× at the
+centre of the slider. This is the control that makes playback readable: at the
+Noto mainshock it draws 174 quakes against 10,518 for **Keep all**, which
+switches the fading off entirely. Small quakes elsewhere have aged out, so the
+sequence is the only thing moving.
+
+Windows are counted in *simulated* time, so a setting means the same span of
+real seismicity at any speed. Neither control applies when playback is stopped —
+then you always see the full filtered catalogue.
 
 ## Cross-section
 
