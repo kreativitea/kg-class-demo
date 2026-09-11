@@ -95,21 +95,33 @@ English is the source. Prose is translated; the attribution line and the USGS
 place names stay English in both, which is the convention the course repo this
 came from uses throughout.
 
-## One file, no network
+## One file, and one request you ask for
 
-A single `index.html`: no libraries, no map tiles, no build step, and no
-requests at run time. The earthquake catalogue and the coastlines are written
-into the file as data, so it works with the wifi off and looks identical every
-time. That costs about 680 KB, of which three lines are data and the rest is
-readable source.
+A single `index.html`: no libraries, no map tiles, no build step. The earthquake
+catalogue and the coastlines are written into the file as data, so it works with
+the wifi off and looks identical every time. That costs about 680 KB, of which three
+lines are data and the rest is readable source.
+
+**Reload from USGS**, under the count, is the one exception, and only when you press
+it. It asks the USGS the same question the catalogue was built from — M4.0+, the same
+box — starting at the newest quake already in the file, and adds what comes back. The
+count goes up, a fetched quake's tooltip says *fetched just now*, and a second press
+adds nothing it already has. With no network it says so in red and changes nothing.
+Nothing is saved: reload the page and it is the snapshot again.
+
+The button is also the point of the demo. A copied catalogue cannot be broken by
+anything the USGS changes, and it never shows today's earthquake. A fetch shows
+today's, and depends on the answer arriving in the shape the code expects: a quake
+with no number for a magnitude is skipped, so if the USGS ever renamed that field,
+the button would calmly report nothing new.
 
 ## Data
 
 - **Earthquakes** — the [USGS Earthquake Hazards Program](https://earthquake.usgs.gov),
   M4.0+, 22–48°N and 121–151°E, 2016-01-01 to 2026-09-04. A work of the US
   federal government, so not subject to copyright. The exact query is in a
-  comment at the top of `index.html`; re-run it with a later end date to refresh
-  the snapshot.
+  comment at the top of the data in `index.html`; re-run it with a later end date to
+  refresh the snapshot, or press **Reload from USGS** to add what is newer for one visit.
 - **Coastlines** — [Natural Earth](https://www.naturalearthdata.com) 10m land,
   public domain, clipped to the map's box and simplified to about 1 km.
 
