@@ -108,7 +108,7 @@
 </div>
 
 <div class="panel" id="legend">
-  <div class="lab" data-i18n="colourDepth">Colour &mdash; depth</div>
+  <div class="lab" data-i18n="colorDepth">Color &mdash; depth</div>
   <div id="ramp"></div>
   <div class="ticks" id="ticks"></div>
   <hr>
@@ -160,7 +160,7 @@
 
 <script>
 /* ---- data (baked in: this file needs no internet) ----------------------
-   The catalogue below is one answer from the USGS, saved into the file:
+   The catalog below is one answer from the USGS, saved into the file:
      https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson
        &starttime=2016-01-01&endtime=2026-09-04&minmagnitude=4
        &minlatitude=22&maxlatitude=48&minlongitude=121&maxlongitude=151
@@ -180,8 +180,8 @@ const DIRS  = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W
 // as rings rather than discs, so a big one does not hide what is under it.
 const radius = m => Math.pow(2.45, m - 4);
 
-// COLOUR = depth, as a full rainbow. The stops are not evenly spaced in
-// kilometres on purpose: two thirds of these quakes are shallower than 50 km,
+// COLOR = depth, as a full rainbow. The stops are not evenly spaced in
+// kilometers on purpose: two thirds of these quakes are shallower than 50 km,
 // so a scale that was linear in depth spent the whole rainbow on the empty
 // deep end and painted the map one shade of red. Crowding the stops where the
 // data actually is spends the rainbow where it can be seen.
@@ -230,7 +230,7 @@ const LONW = VIEW.e - VIEW.w, MERH = MYn - MYs;  // view size in projected units
 let cw=0, ch=0, base=1, ox=0, oy=0, zoom=1, panx=0, pany=0, dpr=1;
 
 
-// project, then apply zoom about the canvas centre plus the pan offset
+// project, then apply zoom about the canvas center plus the pan offset
 const X = lon => (ox + (lon-VIEW.w)*base - cw/2)*zoom + cw/2 + panx;
 const Y = lat => (oy + (MYn-mercY(lat))*base - ch/2)*zoom + ch/2 + pany;
 // and the inverse, for reading a longitude/latitude back out of a click
@@ -242,7 +242,7 @@ const invLat = py => {
 
 /* ---- the clock --------------------------------------------------------
    Playback sweeps a cursor through the decade and lets each quake strike as
-   its own moment arrives. The catalogue is stored to the hour, so the order
+   its own moment arrives. The catalog is stored to the hour, so the order
    of an aftershock sequence is real, not an approximation.               */
 const DAY = 86400000;
 const SPEEDS = [1, 2, 4];
@@ -489,8 +489,8 @@ cv.addEventListener('wheel', e=>{
   const nz = Math.max(1, Math.min(14, zoom*k));
   const f = nz/zoom;
   // Keep the point under the cursor pinned. X() scales about the canvas
-  // CENTRE — (world - cw/2)*zoom + cw/2 + panx — so the anchor has to be
-  // measured from the centre too. Using the raw offset left an error of
+  // CENTER — (world - cw/2)*zoom + cw/2 + panx — so the anchor has to be
+  // measured from the center too. Using the raw offset left an error of
   // cw/2*(1-f), which slid the map sideways on every notch.
   const ax = e.offsetX - cw/2, ay = e.offsetY - ch/2;
   panx = ax - f*(ax - panx);
@@ -532,7 +532,7 @@ const STR = {
   en: {
     title:"Earthquakes around Japan",
     sub:"Every recorded quake of magnitude 4.0 and above, 2016–2026.",
-    colourDepth:"Colour — depth", sizeMag:"Size — magnitude",
+    colorDepth:"Color — depth", sizeMag:"Size — magnitude",
     magnitude:"Magnitude", depth:"Depth", year:"Year",
     reset:"Reset", section:"Cross-section",
     fade:"Trail", keepall:"Keep all", forever:"kept",
@@ -548,14 +548,14 @@ const STR = {
     deep:(d,date)=>`${d} km deep · ${date}`,
     where:(dist,dir,place)=> dist ? `${dist} km ${DIRS[dir]||""} of ${place}` : place,
     sec:(lo,hi,n)=>`Side view of the slice between ${lo}°N and ${hi}°N — `
-      + `${n} quakes, seen from the south. Grey bar = land. `
+      + `${n} quakes, seen from the south. Gray bar = land. `
       + `Drag the band on the map to move it.`,
     km:"km"
   },
   ja: {
     title:"日本周辺の地震",
     sub:"マグニチュード4.0以上の地震すべて（2016〜2026年）。",
-    colourDepth:"色 — 深さ", sizeMag:"大きさ — マグニチュード",
+    colorDepth:"色 — 深さ", sizeMag:"大きさ — マグニチュード",
     magnitude:"マグニチュード", depth:"深さ", year:"年",
     reset:"リセット", section:"断面図",
     fade:"残る時間", keepall:"全て残す", forever:"消えない",
@@ -618,7 +618,7 @@ const syncY = pair('y0','y1','yf',0,YR1-YR0,(x,y)=>{
   $('yv').textContent = x===y ? `${F.y0}` : `${F.y0} – ${F.y1}`; update(); });
 
 /* The slider scales the per-magnitude window. Log and symmetric about the
-   middle — 0.125x at the left, 1x dead centre, 8x at the right — so the
+   middle — 0.125x at the left, 1x dead center, 8x at the right — so the
    default is a real position on the track rather than an arbitrary one.  */
 const posToMult = v => Math.pow(8, (v-50)/50);
 const fmtMult = m => (m < 1 ? m.toFixed(2) : +m.toFixed(1)) + '\u00d7';

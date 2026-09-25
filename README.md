@@ -20,12 +20,12 @@ large quakes are unmissable rather than merely a bit bigger:
 | 1 px | 2.5 px | 6 px | 15 px | 25 px |
 
 That is about 630× the area between an M4 and the M7.6. It has to be that steep:
-90% of this catalogue is under M5, so a gentle curve loses the big ones in the
+90% of this catalog is under M5, so a gentle curve loses the big ones in the
 crowd. Anything past 6 px is drawn as a ring rather than a solid disc, so a large
 circle doesn't hide what sits underneath it.
 
-**Colour is depth**, as a full rainbow from red through green and blue to
-magenta. The colour stops are deliberately *not* evenly spaced in kilometres —
+**Color is depth**, as a full rainbow from red through green and blue to
+magenta. The color stops are deliberately *not* evenly spaced in kilometers —
 they sit at 0, 15, 30, 50, 80, 130, 250, 450 and 700 km. Two thirds of these
 quakes are shallower than 50 km, so a scale that was linear in depth spent its
 whole range on the empty deep end and painted the map a single shade of red.
@@ -33,7 +33,7 @@ Crowding the stops where the data actually is spends the rainbow where it can
 be seen.
 
 Together the two make the subduction zone readable without a word of
-explanation: hot colours along the trench to the east, cooling and then
+explanation: hot colors along the trench to the east, cooling and then
 shifting through blue to magenta as the Pacific plate dives westward under the
 arc.
 
@@ -48,7 +48,7 @@ earthquakes a year, so at any watchable speed ringing every one of them is just
 noise — about 8 rings a second is punctuation you can follow, over a field of
 smaller quakes that flash as they land.
 
-The catalogue is stored to the **hour**, so aftershock sequences arrive in their
+The catalog is stored to the **hour**, so aftershock sequences arrive in their
 real order. Watch 1 January 2024: the Noto Peninsula M7.5 is still ringing while
 its M6.5, M6.2, M6.1, M5.9 and M5.8 aftershocks fire around it.
 
@@ -62,23 +62,23 @@ is three times longer per magnitude step:
 | 2 weeks | 6 weeks | 4 months | 1 year | 2 years |
 
 **Trail** multiplies all of those at once, from 0.13× to 8×, with 1× at the
-centre of the slider. This is the control that makes playback readable: at the
+center of the slider. This is the control that makes playback readable: at the
 Noto mainshock it draws 174 quakes against 10,518 for **Keep all**, which
 switches the fading off entirely. Small quakes elsewhere have aged out, so the
 sequence is the only thing moving.
 
 Windows are counted in *simulated* time, so a setting means the same span of
 real seismicity at any speed. Neither control applies when playback is stopped —
-then you always see the full filtered catalogue.
+then you always see the full filtered catalog.
 
 ## Cross-section
 
 **Cross-section** slices the region and shows the same earthquakes *from the
 side*. It shares the map's horizontal scale, so a feature on the map sits
 directly above its own depth profile — which is where the slab stops being a
-colour gradient and becomes a line running from the trench down to 500 km.
+color gradient and becomes a line running from the trench down to 500 km.
 
-Drag the pale band on the map to move the slice. The grey bar at the top of the
+Drag the pale band on the map to move the slice. The gray bar at the top of the
 section marks where the slice crosses land.
 
 ## Other things to try
@@ -100,18 +100,18 @@ came from uses throughout.
 ## One file, and one request you ask for
 
 A single `index.html`: no libraries, no map tiles, no build step. The earthquake
-catalogue and the coastlines are written into the file as data, so it works with
+catalog and the coastlines are written into the file as data, so it works with
 the wifi off and looks identical every time. That costs about 680 KB, of which three
 lines are data and the rest is readable source.
 
 **Reload from USGS**, under the count, is the one exception, and only when you press
-it. It asks the USGS the same question the catalogue was built from — M4.0+, the same
+it. It asks the USGS the same question the catalog was built from — M4.0+, the same
 box — starting at the newest quake already in the file, and adds what comes back. The
 count goes up, a fetched quake's tooltip says *fetched just now*, and a second press
 adds nothing it already has. With no network it says so in red and changes nothing.
 Nothing is saved: reload the page and it is the snapshot again.
 
-The button is also the point of the demo. A copied catalogue cannot be broken by
+The button is also the point of the demo. A copied catalog cannot be broken by
 anything the USGS changes, and it never shows today's earthquake. A fetch shows
 today's, and depends on the answer arriving in the shape the code expects: a quake
 with no number for a magnitude is skipped, so if the USGS ever renamed that field,
@@ -131,7 +131,7 @@ Neither source carries terms that restrict this. Worth remembering that the file
 *embeds* the data rather than fetching it, which is a stronger act than linking —
 so check the terms again if either source is ever swapped for one that has them.
 
-## Licence
+## License
 
 Not chosen yet for the code, which means all rights reserved by default. The two
 data sources above carry their own terms and are unaffected.
