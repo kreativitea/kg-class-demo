@@ -3,6 +3,8 @@
 Every earthquake of magnitude 4.0 and above around Japan between 2016 and 2026 —
 **14,568 of them** — on one map, in one file.
 
+Colour is depth. Size is magnitude.
+
 ### → **https://kreativitea.github.io/kg-class-demo/**
 
 Or download `index.html` and double-click it. There is no build step, no server
